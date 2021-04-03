@@ -31,8 +31,8 @@ pipeline {
         steps {
           script {
             docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
-              sh 'docker stop $(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
-              sh 'docker rm $(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
+              sh 'export RMI=$(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
+              sh 'if [ "$RMI" > /dev/null ];then docker kill $RMI; docker rm $RMI; fi'
               sh 'docker system prune -a -f'
             }
           }
@@ -43,8 +43,8 @@ pipeline {
         steps {
           script {
             docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
-              sh 'docker stop $(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
-              sh 'docker rm $(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
+              sh 'export RMI=$(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
+              sh 'if [ "$RMI" > /dev/null ];then docker kill $RMI; docker rm $RMI; fi'
               sh 'docker system prune -a -f'
             }
           }
