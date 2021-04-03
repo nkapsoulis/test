@@ -4,8 +4,8 @@ sudo apt-get update
 sudo apt-get install -y nfs-kernel-server
 sudo dpkg --configure -a
 
-sudo mkdir -p /local/organizations
-sudo mount --bind src/ /local/organizations # MUST BE GRANTED RIGHTS
+cp -r src/ /local/
+mv /local/src /local/organizations
 
 if [ ! -d "/local/bin" ]; then 
 	cd /local/ && curl -sSL https://raw.githubusercontent.com/hyperledger/fabric/release-2.2/scripts/bootstrap.sh | bash -s 2.2.0 1.4.7 -ds && cd -
