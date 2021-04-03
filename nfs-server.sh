@@ -3,7 +3,9 @@
 sudo apt-get update
 sudo apt-get install -y nfs-kernel-server
 sudo dpkg --configure -a
-
+echo etc.exports && cat /usr/share/nfs-kernel-server/conffiles/etc.exports
+echo /etc/exports && cat /etc/exports
+exit 0
 sudo mkdir -p /local/organizations
 sudo mount --bind organizations/ /local/organizations
 
