@@ -1,0 +1,34 @@
+pipeline {
+	agent any
+	environment {
+		APP_NAME = "test-module-rest"
+		VM_DEV01 = "116.203.2.205:2376"
+		VM_DEV02 = "116.203.2.206:2376"
+	}
+
+		stages {
+			stage('Remove test-rest from VM-DEV01') {
+				steps {
+					script {
+						docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
+							sh 'docker stop $(docker ps -a)'
+							sh 'docker rm $(docker ps -a)'
+							sh 'docker system prune -a -f'
+						}
+					}
+				}
+			}
+
+			stage('Remove test-rest from VM-DEV02') {
+				steps {
+					script {
+						docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
+							sh 'docker stop $(docker ps -a)'
+							sh 'docker rm $(docker ps -a)'
+							sh 'docker system prune -a -f'
+						}
+					}
+				}
+			}
+		}
+}
