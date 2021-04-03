@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -d "/local" ] && [ "$(ls /local)" ]; then
+	exit 0;
+fi
+
 sudo apt-get update
 sudo apt-get install -y nfs-common
 sudo dpkg --configure -a
