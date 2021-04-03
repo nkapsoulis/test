@@ -27,63 +27,87 @@ pipeline {
             }
         }
 
-        stage('Build with Maven') {
-            steps {
-                echo 'Build with Maven'
-                sh 'mvn -f pom.xml clean package'
+      stage('Remove test-rest from VM-DEV01') {
+        steps {
+          script {
+            docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
+              sh 'if [ "$(docker ps -q)" > /dev/null ];then docker kill $(docker ps -q); fi'
+              sh 'if [ "$(docker ps -aq)" > /dev/null ];then docker rm $(docker ps -aq); fi'
+              sh 'docker system prune -a -f'
             }
+          }
         }
+      }
 
-        stage('Build image') { // build and tag docker image
-            steps {
-                echo 'Starting to build docker image'
-                script {
-                    def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG)
-                }
+      stage('Remove test-rest from VM-DEV02') {
+        steps {
+          script {
+            docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
+              sh 'if [ "$(docker ps -q)" > /dev/null ];then docker kill $(docker ps -q); fi'
+              sh 'if [ "$(docker ps -aq)" > /dev/null ];then docker rm $(docker ps -aq); fi'
+              sh 'docker system prune -a -f'
             }
+          }
         }
+      }
 
-        stage ('Push image to Artifactory') {
-            steps {
+      stage('Build with Maven') {
+          steps {
+              echo 'Build with Maven'
+              sh 'mvn -f pom.xml clean package'
+          }
+      }
+
+      stage('Build image') { // build and tag docker image
+          steps {
+              echo 'Starting to build docker image'
+              script {
+                  def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG)
+              }
+          }
+      }
+
+      stage ('Push image to Artifactory') {
+          steps {
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'Artifacts', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+                echo 'Login to Artifactory Registry'
+                sh "docker login --password=${PASSWORD} --username=${USERNAME} ${ARTIFACTORY_SERVER}"
+
+                echo 'Pull image with Build-ID'
+                sh 'docker push "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'
+
+                echo 'Logout from Registry'
+                sh 'docker logout $ARTIFACTORY_SERVER'
+            }
+          }
+      }
+
+      stage('Docker Remove Image from CI Server') {
+      steps {
+              sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'
+          }
+      }
+
+      stage('Deploy image on DEV_XX') {
+        steps{
+          script {
+            docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
               withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'Artifacts', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
                   echo 'Login to Artifactory Registry'
                   sh "docker login --password=${PASSWORD} --username=${USERNAME} ${ARTIFACTORY_SERVER}"
 
                   echo 'Pull image with Build-ID'
-                  sh 'docker push "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'
+                  sh 'docker pull "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'
+
+                  echo 'Run docker image in detach mode'
+                  sh 'docker run -d -p 8080:8080 --name "$APP_NAME" "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'
 
                   echo 'Logout from Registry'
                   sh 'docker logout $ARTIFACTORY_SERVER'
               }
             }
-        }
-
-        stage('Docker Remove Image from CI Server') {
-        steps {
-                sh 'docker rmi "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'
-            }
-        }
-
-        stage('Deploy image on DEV_XX') {
-          steps{
-            script {
-              docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
-                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'Artifacts', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-                    echo 'Login to Artifactory Registry'
-                    sh "docker login --password=${PASSWORD} --username=${USERNAME} ${ARTIFACTORY_SERVER}"
-
-                    echo 'Pull image with Build-ID'
-                    sh 'docker pull "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'
-
-                    echo 'Run docker image in detach mode'
-                    sh 'docker run -d -p 8080:8080 --name "$APP_NAME" "$ARTIFACTORY_DOCKER_REGISTRY$DOCKER_IMAGE_TAG"'
-
-                    echo 'Logout from Registry'
-                    sh 'docker logout $ARTIFACTORY_SERVER'
-                }
-              }
-            }
           }
         }
+      }
     }
 }
