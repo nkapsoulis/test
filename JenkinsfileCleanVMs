@@ -11,8 +11,8 @@ pipeline {
 				steps {
 					script {
 						docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
-							sh 'docker stop $(docker ps -a)'
-							sh 'docker rm $(docker ps -a)'
+							sh 'docker stop $(docker ps -aq)'
+							sh 'docker rm $(docker ps -aq)'
 							sh 'docker system prune -a -f'
 						}
 					}
@@ -23,8 +23,8 @@ pipeline {
 				steps {
 					script {
 						docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
-							sh 'docker stop $(docker ps -a)'
-							sh 'docker rm $(docker ps -a)'
+							sh 'docker stop $(docker ps -aq)'
+							sh 'docker rm $(docker ps -aq)'
 							sh 'docker system prune -a -f'
 						}
 					}
