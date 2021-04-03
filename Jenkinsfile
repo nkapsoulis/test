@@ -57,7 +57,7 @@ pipeline {
           script {
             docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
               echo 'Setup NFS Server on VM1'
-              sh 'cat nfs-server.sh | sed "s/CLIENT_IP/$VM_DEV02/g" | bash'
+              sh 'cat nfs-server.sh | sed "s/CLIENT_IP/$VM_DEV02/g" | sed "s/sudo//g" | bash'
               sh 'ls -ahl /local'
             }
           }
@@ -69,7 +69,7 @@ pipeline {
           script {
             docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
               echo 'Setup NFS Client on VM2'
-              sh 'cat nfs-client.sh | sed "s/HOST_IP/$VM_DEV01/g" | bash'
+              sh 'cat nfs-client.sh | sed "s/HOST_IP/$VM_DEV01/g" | sed "s/sudo//g" | bash'
               sh 'ls -ahl /local'
             }
           }
