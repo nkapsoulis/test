@@ -11,8 +11,8 @@ pipeline {
 				steps {
 					script {
 						docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
-							sh 'docker stop $(docker ps -aq)'
-							sh 'docker rm $(docker ps -aq)'
+							sh 'if [ "$(docker ps -q)" > /dev/null ];then docker kill $(docker ps -q); fi'
+							sh 'if [ "$(docker ps -aq)" > /dev/null ];then docker rm $(docker ps -aq); fi'
 							sh 'docker system prune -a -f'
 						}
 					}
@@ -23,8 +23,8 @@ pipeline {
 				steps {
 					script {
 						docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
-							sh 'docker stop $(docker ps -aq)'
-							sh 'docker rm $(docker ps -aq)'
+							sh 'if [ "$(docker ps -q)" > /dev/null ];then docker kill $(docker ps -q); fi'
+							sh 'if [ "$(docker ps -aq)" > /dev/null ];then docker rm $(docker ps -aq); fi'
 							sh 'docker system prune -a -f'
 						}
 					}
