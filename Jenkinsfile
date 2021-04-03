@@ -27,35 +27,58 @@ pipeline {
             }
         }
 
-      stage('Remove containers from VM-DEV01') {
+      stage('Remove APP_NAME from VM-DEV01') {
         steps {
           script {
             docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
-              sh 'if [ "$(docker ps -q)" > /dev/null ];then docker kill $(docker ps -q); fi'
-              sh 'if [ "$(docker ps -aq)" > /dev/null ];then docker rm $(docker ps -aq); fi'
+              sh 'docker stop $(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
+              sh 'docker rm $(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
               sh 'docker system prune -a -f'
             }
           }
         }
       }
 
-      stage('Remove containers from VM-DEV02') {
+      stage('Remove APP_NAME from VM-DEV02') {
         steps {
           script {
             docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
-              sh 'if [ "$(docker ps -q)" > /dev/null ];then docker kill $(docker ps -q); fi'
-              sh 'if [ "$(docker ps -aq)" > /dev/null ];then docker rm $(docker ps -aq); fi'
+              sh 'docker stop $(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
+              sh 'docker rm $(docker ps -a |grep $APP_NAME|awk \'{print $1;}\')'
               sh 'docker system prune -a -f'
             }
           }
         }
       }
 
-      stage('Setup NFS Server on VM1') {
+
+      stage('Setup NFS Server on VM-DEV01') {
+        steps {
+          script {
+            docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
+              echo 'Setup NFS Server on VM1'
+              sh 'cat nfs-server.sh | sed "s/CLIENT_IP/$VM_DEV02/g" | bash'
+              sh 'ls -ahl /local'
+            }
+          }
+        }
+      }
+
+      stage('Setup NFS Client on VM-DEV02') {
+        steps {
+          script {
+            docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
+              echo 'Setup NFS Client on VM2'
+              sh 'cat nfs-client.sh | sed "s/HOST_IP/$VM_DEV01/g" | bash'
+              sh 'ls -ahl /local'
+            }
+          }
+        }
+      }
+
+      stage('FAIL') {
           steps {
-              echo 'Build with Maven'
-              sh 'mvn -f pom.xml clean package'
-              sh 'pwd && whoami && ifconfig'
+              sh 'ifconfig'
           }
       }
 
