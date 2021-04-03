@@ -27,7 +27,7 @@ pipeline {
             }
         }
 
-      stage('Remove test-rest from VM-DEV01') {
+      stage('Remove containers from VM-DEV01') {
         steps {
           script {
             docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
@@ -39,7 +39,7 @@ pipeline {
         }
       }
 
-      stage('Remove test-rest from VM-DEV02') {
+      stage('Remove containers from VM-DEV02') {
         steps {
           script {
             docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
@@ -51,10 +51,11 @@ pipeline {
         }
       }
 
-      stage('Build with Maven') {
+      stage('Setup NFS Server on VM1') {
           steps {
               echo 'Build with Maven'
               sh 'mvn -f pom.xml clean package'
+              sh 'pwd && whoami && ifconfig'
           }
       }
 
