@@ -3,9 +3,7 @@
 sudo apt-get update
 sudo apt-get install -y nfs-kernel-server
 sudo dpkg --configure -a
-echo etc.exports && cat /usr/share/nfs-kernel-server/conffiles/etc.exports
-echo /etc/exports && cat /etc/exports
-exit 0
+
 sudo mkdir -p /local/organizations
 sudo mount --bind organizations/ /local/organizations
 
@@ -13,6 +11,7 @@ cd /local/ && curl -sSL https://raw.githubusercontent.com/hyperledger/fabric/rel
 
 sudo chown nobody:nogroup /local/ /local/*
 sudo chmod 777 /local /local/*
+sudo cat /etc/exports | grep -v local > /etc/exports
 sudo echo '/local/bin	CLIENT_IP(rw,no_root_squash,no_subtree_check)' >> /etc/exports 
 sudo echo '/local/organizations	CLIENT_IP(rw,no_root_squash,no_subtree_check)' >> /etc/exports 
 sudo exportfs -a
@@ -22,3 +21,5 @@ if [ "$(sudo ufw status | grep Status | awk '{print $2}')" == active ]; then
 	sudo ufw status
 fi
 
+echo etc.exports && cat /usr/share/nfs-kernel-server/conffiles/etc.exports
+echo /etc/exports && cat /etc/exports
