@@ -6,4 +6,5 @@ if [ "$1" > /dev/null ];then
 	git commit -m "$1"
 	git push
 fi
+git status
 
