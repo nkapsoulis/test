@@ -60,7 +60,6 @@ pipeline {
             docker.withServer("$VM_DEV01", 'vm-dev01-creds') {
               echo 'Setup NFS Server on VM1'
               sh 'cat nfs-server.sh | sed "s/CLIENT_IP/$VM_DEV02_IP/g" | sed "s/sudo//g" | bash'
-              sh 'ls -ahl /local/*'
             }
           }
         }
@@ -72,23 +71,16 @@ pipeline {
             docker.withServer("$VM_DEV02", 'vm-dev02-creds') {
               echo 'Setup NFS Client on VM2'
               sh 'cat nfs-client.sh | sed "s/HOST_IP/$VM_DEV01_IP/g" | sed "s/sudo//g" | bash'
-              sh 'ls -ahl /local/*'
             }
           }
         }
       }
 
-      stage('FAIL') {
-          steps {
-              sh 'ifconfig'
-          }
-      }
-
-      stage('Build image') { // build and tag docker image
+      stage('Bring up network') {
           steps {
               echo 'Starting to build docker image'
               script {
-                  def dockerImage = docker.build(ARTIFACTORY_DOCKER_REGISTRY + DOCKER_IMAGE_TAG)
+                  sh './network.sh up -ca'
               }
           }
       }
