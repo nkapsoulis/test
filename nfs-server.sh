@@ -7,19 +7,26 @@ sudo dpkg --configure -a
 sudo mkdir -p /local/organizations
 sudo mount --bind organizations/ /local/organizations
 
-cd /local/ && curl -sSL https://raw.githubusercontent.com/hyperledger/fabric/release-2.2/scripts/bootstrap.sh | bash -s 2.2.0 1.4.7 -ds && cd -
+if [ ! -d "/local/bin" ]; then 
+	cd /local/ && curl -sSL https://raw.githubusercontent.com/hyperledger/fabric/release-2.2/scripts/bootstrap.sh | bash -s 2.2.0 1.4.7 -ds && cd -
+fi
 
 sudo chown nobody:nogroup /local/ /local/*
 sudo chmod 777 /local /local/*
-sudo cat /etc/exports | grep -v local > /etc/exports
-sudo echo '/local/bin	CLIENT_IP(rw,no_root_squash,no_subtree_check)' >> /etc/exports 
-sudo echo '/local/organizations	CLIENT_IP(rw,no_root_squash,no_subtree_check)' >> /etc/exports 
+
+sudo cat /etc/exports | grep local
+# sudo cat /etc/exports | grep -v local > /etc/exports # to correct wrong entries
+if [ ! "$(cat /etc/exports | grep local)" ]; then # if NULL then
+	sudo echo '/local/bin	CLIENT_IP(rw,no_root_squash,no_subtree_check)' >> /etc/exports;
+	sudo echo '/local/organizations	CLIENT_IP(rw,no_root_squash,no_subtree_check)' >> /etc/exports;
+fi
+
 sudo exportfs -a
+
 sudo systemctl restart nfs-kernel-server # showmount -e CLIENT_IP
 if [ "$(sudo ufw status | grep Status | awk '{print $2}')" == active ]; then 
 	sudo ufw allow from CLIENT_IP to any port nfs
 	sudo ufw status
 fi
 
-echo etc.exports && cat /usr/share/nfs-kernel-server/conffiles/etc.exports
-echo /etc/exports && cat /etc/exports
+# echo etc.exports && cat /usr/share/nfs-kernel-server/conffiles/etc.exports
