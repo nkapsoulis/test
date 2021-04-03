@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sudo apt update
-sudo apt install -y nfs-kernel-server
+sudo apt-get update
+sudo apt-get install -y nfs-kernel-server
 
 sudo mkdir -p /local/organizations
 sudo mount --bind organizations/ /local/organizations
