@@ -7,4 +7,3 @@ WORKDIR /deployments/
 EXPOSE 8080
 
 CMD java -jar /deployments/microservice-1.0-SNAPSHOT.jar
-
